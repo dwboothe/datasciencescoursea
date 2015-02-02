@@ -1,0 +1,47 @@
+best <- function(state, outcome){
+    ## Read outcome data
+    outcomes_data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+    
+    ## check that state and outcome are valid
+    
+    # uppercase coversion to accept lowercase values 
+    state <- toupper(state)
+    
+    # check state validity
+    states <- unique(outcomes_data$State)
+    if (!(toupper(state) %in% states)) { 
+        # return error msg
+        stop("invalid state")
+    }
+    
+    # check outcome validity
+    outcomes <-setNames(c(11, 17, 23), c("heart attack", "heart failure", "pneumonia"))
+    if (outcome %in% names(outcomes)){
+        # get diseases column
+        diseases_col <- outcomes[[outcome]]
+        
+        # convert rate column to numeric values
+        outcomes_data[, diseases_col] <- as.numeric(outcomes_data[, diseases_col]) 
+        
+    } else {
+        # return error msg
+        stop("invalid outcome")
+    }
+    
+    ##Return hospital name in that state with lowest 30-day death rate
+    
+    # create subset of hospitals in specified state
+    hospitals_in_state <- outcomes_data[which(outcomes_data$State == state),]
+    
+    #calculate min death rate
+    min_rate <- min(hospitals_in_state[, diseases_col], na.rm = TRUE)
+    
+    # create subset of hospitals with lowest death rate of specified deceases in specified state
+    lowest_death_rate <- hospitals_in_state[which(hospitals_in_state[, diseases_col] == min_rate),]
+
+    # order these hospitals by the Hospital Name
+    lowest_death_rate <- lowest_death_rate[order("Hospital.Name"),]
+    
+    # return Hospital Name
+    return(lowest_death_rate[1 , "Hospital.Name"])
+}
